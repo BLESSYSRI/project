@@ -1,0 +1,811 @@
+  <!--<form class="form-horizontal">
+    <script cam-script type="text/form-script">  
+      const form = document.querySelector('.form-horizontal');
+
+      const input1 = form.querySelector('[cam-variable-name="name"]');
+      const input2 = form.querySelector('[cam-variable-name="content"]');
+
+
+      form.addEventListener('submit', function(event) {
+       event.preventDefault(); // prevent the form from submitting normally
+  
+  
+      const value1 = input1.value;
+      const value2 = input2.value;
+  
+ 
+      window.camForm.variableManager.createVariable({
+    	  name : 'name',
+    	  type : 'String',
+    	  value: value1,
+        } );
+
+  
+      window.camForm.variableManager.createVariable({
+           name: 'content',
+           type: 'String',
+           value: value2
+      });
+  
+  
+       form.submit();
+      } );
+
+
+  </script>
+ </form>
+ <form class='form-horizontal'>
+  <div id='reactContainer'/>
+
+  <script cam-script type='text/javascript'>
+    const container = document.getElementById('reactContainer');
+
+    const e = React.createElement;
+
+    class InputGroup extends React.Component {
+      render() {
+        return e('div', {className: 'form-group'}, [
+          e('label', {className: 'control-label col-md-4', key: 'label'}, this.props.label),
+          e('div', {className: 'col-md-6', key: 'input field'}, [
+            this.props.children,
+            e('div', {className: 'help-block', key: 'help label'}, this.props.helpText)])
+          ]);
+      }
+    }
+
+    class StartForm extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          creditor: '',
+          amount: '',
+          category: 'Travel Expenses',
+          invoiceID: ''
+        };
+
+        this.fileInput = React.createRef();
+
+        this.handleInputChange = this.handleInputChange.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleFileUpload = this.handleFileUpload.bind(this);
+        // Register submit
+        camForm.on('submit', evt => {
+          this.handleSubmit(evt);
+        });
+      }
+
+      handleFileUpload(event) {
+        const reader = new FileReader();
+        reader.readAsDataURL(this.fileInput.current.files[0]);
+        reader.onload = () => {this.setState({invoiceDocument: reader.result.replace(/^data:(.*;base64,)?/, '')})};
+        reader.onerror = error => {console.error(error)};
+      }
+
+
+      handleInputChange(event) {
+          const value = event.target.value;
+          const name = event.target.name;
+
+          this.setState({
+            [name]: value
+          });
+        }
+
+      handleSubmit(event) {
+        camForm.variableManager.createVariable({
+          'name': 'invoiceDocument',
+          'type': 'File',
+          'value': this.state.invoiceDocument,
+          'valueInfo': {filename: 'invoice.pdf'},
+          isDirty: true}
+        );
+        camForm.variableManager.createVariable({
+          'name': 'creditor',
+          'type': 'String',
+          'value': this.state.creditor,
+          isDirty: true}
+        );
+        camForm.variableManager.createVariable({
+          'name': 'amount',
+          'type': 'Double',
+          'value': this.state.amount,
+          isDirty: true}
+        );
+        camForm.variableManager.createVariable({
+          'name': 'category',
+          'type': 'String',
+          'value': this.state.category,
+          isDirty: true}
+        );
+        camForm.variableManager.createVariable({
+          'name': 'invoiceID',
+          'type': 'String',
+          'value': this.state.invoiceID,
+          isDirty: true}
+        );
+      }
+
+      render() {
+        return e('div', {className: 'form-group'}, [
+          e(InputGroup, {label: 'Invoice Document: ', key: 'InvoiceDocument'},
+            e('input', {
+              className: 'form-control',
+              name: 'invoiceDocument',
+              type: 'file',
+              ref: this.fileInput,
+              onChange: this.handleFileUpload})),
+          e(InputGroup, { label: 'Creditor: ',
+                          helpText: 'e.g. "Super Awesome Pizza"',
+                          key: 'Creditor'},
+            e('input', {
+              className: 'form-control',
+              name: 'creditor',
+              type: 'text',
+              onChange: this.handleInputChange,
+              value: this.state.creditor})),
+          e(InputGroup, { label: 'Amount: ',
+                          helpText: 'e.g. "30.00"',
+                          key: 'Amount'},
+            e('input', {
+              className: 'form-control',
+              name: 'amount',
+              type: 'number',
+              onChange: this.handleInputChange,
+              value: this.state.amount})),
+          e(InputGroup, { label: 'Invoice Category: ',
+                          key: 'Category'},
+            e('select', {
+              className: 'form-control',
+              name: 'category',
+              value: this.state.category,
+              onChange: this.handleInputChange
+            }, [
+              e('option', {value: 'Travel Expenses', key: 'Travel'}, 'Travel Expenses'),
+              e('option', {value: 'Business Meals', key: 'Meals'}, 'Business Meals'),
+              e('option', {value: 'Other', key: 'Other'}, 'Other'),
+            ])),
+            e(InputGroup, {label: 'Invoice Number: ',
+                          helpText: 'e.g. "I-12345"',
+                          key: 'InvoiceNumber'},
+              e('input', {
+                className: 'form-control',
+                name: 'invoiceID',
+                type: 'text',
+                onChange: this.handleInputChange,
+                value: this.state.invoiceID})),
+        ]);
+      }
+    }
+
+    const root = ReactDOM.createRoot(container);
+    root.render(e(StartForm));
+  </script>
+</form>
+
+<form class='form-horizontal'>
+  <div id='reactContainer' />
+
+  <script cam-script type='text/Formscript'>
+
+    // Fetch Variables and create new ones
+    camForm.on('form-loaded', function () {
+      camForm.variableManager.createVariable({
+        'name': 'approved',
+        'type': 'Boolean',
+        'value': false,
+        isDirty: true
+      });
+      camForm.variableManager.createVariable({
+        'name': 'comments',
+        'type': 'String',
+        'value': "",
+        isDirty: true
+      });
+
+      camForm.variableManager.fetchVariable('FirmName');
+      camForm.variableManager.fetchVariable('ContactPerson');
+      camForm.variableManager.fetchVariable('mailID');
+      camForm.variableManager.fetchVariable('NameOfPromoter');
+      camForm.variableManager.fetchVariable('ProjectCategory');
+      camForm.variableManager.fetchVariable('EmploymentCount');
+      camForm.variableManager.fetchVariable('AreaOfTheLand');
+      camForm.variableManager.fetchVariable('LandLocation');
+    });
+
+    camForm.on('variables-applied', function () {
+      renderReactForm();
+    });
+
+    // Render React here
+    function renderReactForm() {
+      const container = document.getElementById('reactContainer');
+
+      const e = React.createElement;
+
+      class DisplayGroup extends React.Component {
+        render() {
+          return e('div', {className: 'form-group'}, [
+            
+            e('label', {className: 'control-label col-md-4', key: 'label'}, this.props.label),
+            
+            e('div', {className: 'col-md-6', key:'container'},
+              e('input', {
+                className: 'form-control',
+                value: this.props.value || '',
+                readOnly: true
+              }))
+            ]);
+        }
+      }
+
+      class Approval extends React.Component {
+        constructor(props) {
+          super(props);
+          this.state = {
+            value: false,
+          };
+          this.handleInputChange = this.handleInputChange.bind(this);
+        }
+        
+       /* componentDidMount() {
+        const serializedData = this.props.NameOfPromoter.value;
+        const MyMessage = protobuf.Root.fromJSON(YOUR_PROTOBUF_DEFINITION).lookupType('YourMessageType');
+        const deserializedObject = MyMessage.decode(Buffer.from(serializedData, 'base64')).toJSON();
+        console.log(deserializedObject);
+        } */
+
+        handleInputChange(event) {
+          const target = event.target;
+          const value = target.type === 'checkbox' ? target.checked : target.value;
+
+          camForm.variableManager.variableValue('approved', value);
+          // Activate 'save' button
+          $scope.$$camForm.$dirty = true;
+
+          this.setState({
+            value: value
+          });
+        }
+
+        handleInputChange1(event) {
+          const value = event.target.value;
+          const name = event.target.name;
+
+          this.setState({
+            [name]: value
+          });
+        }
+
+        render() {
+        /* const displayGroups = name.map((value, index) => ({
+                                   (DisplayGroup,{
+                                   label: `NameOfPromoter ${index + 1}`,
+                                   value: value,
+                                   key: `NameOfPromoter ${index + 1}`})
+                                })); */
+
+          return e('div', null, [
+            
+            e('br', {key: 'br2'}),
+            e(DisplayGroup, {
+              label: 'FirmName: ',
+              value: this.props.FirmName.value,
+              key: 'FirmName'
+            }),
+            e(DisplayGroup, {
+              label: 'ContactPerson: ',
+              value: this.props.ContactPerson.value,
+              key: 'ContactPerson'
+            }),
+            e(DisplayGroup, {
+              label: 'mailID',
+              value: this.props.mailID.value,
+              key: 'mailID'
+            }),
+            e(DisplayGroup, {
+              label: 'Promoter',
+              value: this.props.NameOfPromoter.value,
+              key: 'NameOfPromoter'
+            }),
+            e(DisplayGroup, {
+              label: 'EmploymentCount',
+              value: this.props.EmploymentCount.value,
+              key: 'EmploymentCount'
+            }),
+            e(DisplayGroup, {
+              label: 'AreaOfTheLand',
+              value: this.props.AreaOfTheLand.value,
+              key: 'AreaOfTheLand'
+            }),
+            e(DisplayGroup, {
+              label: 'LandLocation',
+              value: this.props.LandLocation.value,
+              key: 'LandLocation'
+            }),
+            e(DisplayGroup, {
+              label: 'ProjectCategory',
+              value: this.props.ProjectCategory.value,
+              key: 'ProjectCategory'
+            }),
+            e('br', {key: 'br3'}),
+            e('label', {className: 'control-label col-md-4', key: 'ApprovalComment'}, 'Dept A Comments'),
+            e('div', {className: 'col-md-6', key: 'ApprovalContainer'},
+              e('input', {
+                className: 'form-control',
+                name: 'comments',
+                type: 'text',
+                value: this.state.comments,
+                className: 'form-control',
+                onChange: this.handleInputChange1
+              })
+            ),
+             e('br', {key: 'br3'}),
+            e('label', {className: 'control-label col-md-4', key: 'ApprovalLabel'}, 'I approve this Invoice'),
+            e('div', {className: 'col-md-6', key: 'ApprovalContainer'},
+              e('input', {
+                className: 'form-control',
+                name: 'approved',
+                type: 'checkbox',
+                checked: this.state.value,
+                className: 'form-control',
+                onChange: this.handleInputChange
+              })
+            ) 
+          ]); 
+        }
+      }
+
+      const root = ReactDOM.createRoot(container);
+      root.render(e(Approval, camForm.variableManager.variables));
+    }
+  </script>
+</form>
+
+<form class='form-horizontal'>
+  <div id='reactContainer' />
+
+  <script cam-script type='text/Formscript'>
+
+    // Fetch Variables and create new ones
+    camForm.on('form-loaded', function () {
+      camForm.variableManager.createVariable({
+        'name': 'approved',
+        'type': 'Boolean',
+        'value': false,
+        isDirty: true
+      });
+      camForm.variableManager.createVariable({
+        'name': 'comments',
+        'type': 'String',
+        'value': "",
+        isDirty: true
+      });
+
+      camForm.variableManager.fetchVariable('FirmName');
+      camForm.variableManager.fetchVariable('ContactPerson');
+      camForm.variableManager.fetchVariable('mailID');
+      camForm.variableManager.fetchVariable('NameOfPromoter');
+      camForm.variableManager.fetchVariable('ProjectCategory');
+      camForm.variableManager.fetchVariable('EmploymentCount');
+      camForm.variableManager.fetchVariable('AreaOfTheLand');
+      camForm.variableManager.fetchVariable('LandLocation');
+    });
+
+    camForm.on('variables-applied', function () {
+      renderReactForm();
+    });
+
+    // Render React here
+    function renderReactForm() {
+      const container = document.getElementById('reactContainer');
+
+      const e = React.createElement;
+
+      class DisplayGroup extends React.Component {
+        render() {
+          return e('div', {className: 'form-group'}, [
+            
+            e('label', {className: 'control-label col-md-4', key: 'label'}, this.props.label),
+            
+            e('div', {className: 'col-md-6', key:'container'},
+              e('input', {
+                className: 'form-control',
+                value: this.props.value || '',
+                readOnly: true
+              }))
+            ]);
+        }
+      }
+
+      class Approval extends React.Component {
+        constructor(props) {
+          super(props);
+          this.state = {
+            valueA: false,
+            valueB:false,
+            valueC:false,
+            valueApproval:false
+          };
+          this.handleInputChange = this.handleInputChange.bind(this);
+        }
+        
+       /* componentDidMount() {
+        const serializedData = this.props.NameOfPromoter.value;
+        const MyMessage = protobuf.Root.fromJSON(YOUR_PROTOBUF_DEFINITION).lookupType('YourMessageType');
+        const deserializedObject = MyMessage.decode(Buffer.from(serializedData, 'base64')).toJSON();
+        console.log(deserializedObject);
+        } */
+
+        handleInputChange(event) {
+          const target = event.target;
+          const value = target.type === 'checkbox' ? target.checked : target.value;
+
+          camForm.variableManager.variableValue('approved', value);
+          // Activate 'save' button
+          $scope.$$camForm.$dirty = true;
+
+          switch(name){
+            case "commentsA":
+              this.setState({
+                valueA: value
+              });
+              case "commentsB":
+                this.setState({
+                  valueB: value
+                });
+              case "commentsC":
+                  this.setState({
+                    valueC: value
+                  });
+              default:
+                this.setState({
+                  valueApproval: value
+                });
+          }
+        }
+
+        handleInputChange1(event) {
+          const value = event.target.value;
+          const name = event.target.name;
+
+          this.setState({
+            [name]: value
+          });
+        }
+
+        render() {
+        /* const displayGroups = name.map((value, index) => ({
+                                   (DisplayGroup,{
+                                   label: `NameOfPromoter ${index + 1}`,
+                                   value: value,
+                                   key: `NameOfPromoter ${index + 1}`})
+                                })); */
+
+          return e('div', null, [
+            
+            e('br', {key: 'br2'}),
+            e(DisplayGroup, {
+              label: 'FirmName: ',
+              value: this.props.FirmName.value,
+              key: 'FirmName'
+            }),
+            e(DisplayGroup, {
+              label: 'ContactPerson: ',
+              value: this.props.ContactPerson.value,
+              key: 'ContactPerson'
+            }),
+            e(DisplayGroup, {
+              label: 'mailID',
+              value: this.props.mailID.value,
+              key: 'mailID'
+            }),
+            e(DisplayGroup, {
+              label: 'Promoter',
+              value: this.props.NameOfPromoter.value,
+              key: 'NameOfPromoter'
+            }),
+            e(DisplayGroup, {
+              label: 'EmploymentCount',
+              value: this.props.EmploymentCount.value,
+              key: 'EmploymentCount'
+            }),
+            e(DisplayGroup, {
+              label: 'AreaOfTheLand',
+              value: this.props.AreaOfTheLand.value,
+              key: 'AreaOfTheLand'
+            }),
+            e(DisplayGroup, {
+              label: 'LandLocation',
+              value: this.props.LandLocation.value,
+              key: 'LandLocation'
+            }),
+            e(DisplayGroup, {
+              label: 'ProjectCategory',
+              value: this.props.ProjectCategory.value,
+              key: 'ProjectCategory'
+            }),
+            e('br', {key: 'br3'}),
+            e('label', {className: 'control-label col-md-4', key: 'ApprovalComment'}, 'Department A Comments'),
+            e('div', {className: 'col-md-6', key: 'ApprovalContainer'},
+              e('input', {
+                className: 'form-control',
+                name: 'commentsA',
+                type: 'text',
+                value: this.state.comments,
+                className: 'form-control',
+                onChange: this.handleInputChange1
+              })
+            ),
+             e('br', {key: 'br3'}),
+            e('label', {className: 'control-label col-md-4', key: 'ApprovalLabel'}, 'Do you approve this Invoice'),
+            e('div', {className: 'col-md-6', key: 'ApprovalContainer'},
+              e('input', {
+                className: 'form-control',
+                name: 'approved',
+                type: 'checkbox',
+                checked: this.state.value,
+                className: 'form-control',
+                onChange: this.handleInputChange
+              })
+            ),
+            
+            e('br', {key: 'br3'}),
+            e('label', {className: 'control-label col-md-4', key: 'ApprovalComment'}, 'Department B Comments'),
+            e('div', {className: 'col-md-6', key: 'ApprovalContainer'},
+              e('input', {
+                className: 'form-control',
+                name: 'commentsB',
+                type: 'text',
+                value: this.state.comments,
+                className: 'form-control',
+                onChange: this.handleInputChange1
+              })
+            ),
+             e('br', {key: 'br3'}),
+            e('label', {className: 'control-label col-md-4', key: 'ApprovalLabel'}, 'Do you approve this Invoice'),
+            e('div', {className: 'col-md-6', key: 'ApprovalContainer'},
+              e('input', {
+                className: 'form-control',
+                name: 'approved',
+                type: 'checkbox',
+                checked: this.state.value,
+                className: 'form-control',
+                onChange: this.handleInputChange
+              })
+            ),
+            
+            e('br', {key: 'br3'}),
+            e('label', {className: 'control-label col-md-4', key: 'ApprovalComment'}, 'Department C Comments'),
+            e('div', {className: 'col-md-6', key: 'ApprovalContainer'},
+              e('input', {
+                className: 'form-control',
+                name: 'commentsC',
+                type: 'text',
+                value: this.state.comments,
+                className: 'form-control',
+                onChange: this.handleInputChange1
+              })
+            ),
+             e('br', {key: 'br3'}),
+            e('label', {className: 'control-label col-md-4', key: 'ApprovalLabel'}, 'Do you approve this Invoice'),
+            e('div', {className: 'col-md-6', key: 'ApprovalContainer'},
+              e('input', {
+                className: 'form-control',
+                name: 'approved',
+                type: 'checkbox',
+                checked: this.state.value,
+                className: 'form-control',
+                onChange: this.handleInputChange
+              })
+            ) ,
+            e('br', {key: 'br3'}),
+            e('label', {className: 'control-label col-md-4', key: 'ApprovalComment'}, 'Message to Applicant'),
+            e('div', {className: 'col-md-6', key: 'ApprovalContainer'},
+              e('input', {
+                className: 'form-control',
+                name: 'comments',
+                type: 'text',
+                value: this.state.comments,
+                className: 'form-control',
+                onChange: this.handleInputChange1
+              })
+            ),
+             e('br', {key: 'br3'}),
+            e('label', {className: 'control-label col-md-4', key: 'ApprovalLabel'}, 'Do you approve this Invoice'),
+            e('div', {className: 'col-md-6', key: 'ApprovalContainer'},
+              e('input', {
+                className: 'form-control',
+                name: 'approved',
+                type: 'checkbox',
+                checked: this.state.value,
+                className: 'form-control',
+                onChange: this.handleInputChange
+              })
+            ) 
+
+
+
+          ]); 
+        }
+      }
+
+      const root = ReactDOM.createRoot(container);
+      root.render(e(Approval, camForm.variableManager.variables));
+    }
+  </script>
+</form>
+ -->
+ <form class='form-horizontal'>
+  <div id='reactContainer' />
+
+  <script cam-script type='text/Formscript'>
+
+    // Fetch Variables and create new ones
+    camForm.on('form-loaded', function () {
+      camForm.variableManager.createVariable({
+        'name': 'approved',
+        'type': 'Boolean',
+        'value': false,
+        isDirty: true
+      });
+      camForm.variableManager.createVariable({
+        'name': 'comments',
+        'type': 'String',
+        'value': "",
+        isDirty: true
+      });
+
+      camForm.variableManager.fetchVariable('FirmName');
+      camForm.variableManager.fetchVariable('ContactPerson');
+      camForm.variableManager.fetchVariable('mailID');
+      
+      camForm.variableManager.fetchVariable('ProjectCategory');
+      camForm.variableManager.fetchVariable('EmploymentCount');
+      camForm.variableManager.fetchVariable('AreaOfTheLand');
+      camForm.variableManager.fetchVariable('LandLocation');
+    });
+
+    camForm.on('variables-applied', function () {
+      renderReactForm();
+    });
+
+    // Render React here
+    function renderReactForm() {
+      const container = document.getElementById('reactContainer');
+
+      const e = React.createElement;
+
+      class DisplayGroup extends React.Component {
+        render() {
+          return e('div', {className: 'form-group'}, [
+            
+            e('label', {className: 'control-label col-md-4', key: 'label'}, this.props.label),
+            
+            e('div', {className: 'col-md-6', key:'container'},
+              e('input', {
+                className: 'form-control',
+                value: this.props.value || '',
+                readOnly: true
+              }))
+            ]);
+        }
+      }
+
+      class Approval extends React.Component {
+        constructor(props) {
+          super(props);
+          this.state = {
+            value: false,
+          };
+          this.handleInputChange = this.handleInputChange.bind(this);
+        }
+        
+       /* componentDidMount() {
+        const serializedData = this.props.NameOfPromoter.value;
+        const MyMessage = protobuf.Root.fromJSON(YOUR_PROTOBUF_DEFINITION).lookupType('YourMessageType');
+        const deserializedObject = MyMessage.decode(Buffer.from(serializedData, 'base64')).toJSON();
+        console.log(deserializedObject);
+        } */
+
+        handleInputChange(event) {
+          const target = event.target;
+          const value = target.type === 'checkbox' ? target.checked : target.value;
+
+          camForm.variableManager.variableValue('approved', value);
+          // Activate 'save' button
+          $scope.$$camForm.$dirty = true;
+
+          this.setState({
+            value: value
+          });
+        }
+
+        handleInputChange1(event) {
+          const value = event.target.value;
+          const name = event.target.name;
+
+          this.setState({
+            [name]: value
+          });
+        }
+
+        render() {
+        /* const displayGroups = name.map((value, index) => ({
+                                   (DisplayGroup,{
+                                   label: `NameOfPromoter ${index + 1}`,
+                                   value: value,
+                                   key: `NameOfPromoter ${index + 1}`})
+                                })); */
+
+          return e('div', null, [
+            
+            e('br', {key: 'br2'}),
+            e(DisplayGroup, {
+              label: 'FirmName: ',
+              value: this.props.FirmName.value,
+              key: 'FirmName'
+            }),
+            e(DisplayGroup, {
+              label: 'ContactPerson: ',
+              value: this.props.ContactPerson.value,
+              key: 'ContactPerson'
+            }),
+            e(DisplayGroup, {
+              label: 'mailID',
+              value: this.props.mailID.value,
+              key: 'mailID'
+            }),
+            
+            e(DisplayGroup, {
+              label: 'EmploymentCount',
+              value: this.props.EmploymentCount.value,
+              key: 'EmploymentCount'
+            }),
+            e(DisplayGroup, {
+              label: 'AreaOfTheLand',
+              value: this.props.AreaOfTheLand.value,
+              key: 'AreaOfTheLand'
+            }),
+            e(DisplayGroup, {
+              label: 'LandLocation',
+              value: this.props.LandLocation.value,
+              key: 'LandLocation'
+            }),
+            e(DisplayGroup, {
+              label: 'ProjectCategory',
+              value: this.props.ProjectCategory.value,
+              key: 'ProjectCategory'
+            }),
+            e('br', {key: 'br3'}),
+            e('label', {className: 'control-label col-md-4', key: 'ApprovalComment'}, 'Department C Comments'),
+            e('div', {className: 'col-md-6', key: 'ApprovalContainer'},
+              e('input', {
+                className: 'form-control',
+                name: 'comments',
+                type: 'text',
+                value: this.state.comments,
+                className: 'form-control',
+                onChange: this.handleInputChange1
+              })
+            ),
+             e('br', {key: 'br3'}),
+            e('label', {className: 'control-label col-md-4', key: 'ApprovalLabel'}, 'Do you  approve this Invoice'),
+            e('div', {className: 'col-md-6', key: 'ApprovalContainer'},
+              e('input', {
+                className: 'form-control',
+                name: 'approved',
+                type: 'checkbox',
+                checked: this.state.value,
+                className: 'form-control',
+                onChange: this.handleInputChange
+              })
+            ), 
+          ]); 
+        }
+      }
+
+      const root = ReactDOM.createRoot(container);
+      root.render(e(Approval, camForm.variableManager.variables));
+    }
+  </script>
+</form>
